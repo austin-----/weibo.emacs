@@ -178,4 +178,24 @@
 (weibo-timeline-register-provider (weibo-comments-to-me-timeline-provider))
 (weibo-timeline-register-provider (weibo-public-timeline-provider))
 
+;; weibo API: https://api.weibo.com/2/short_url/shorten.json
+(defun weibo-url-shorten-at-point ()
+  "Replace the url at point with a tiny version."
+  (interactive)
+  (let ((url-bounds (bounds-of-thing-at-point 'url)))
+    (when url-bounds
+      (let ((url (weibo-url-shorten-get (thing-at-point 'url))))
+	(when url
+	  (save-restriction
+	    (narrow-to-region (car url-bounds) (cdr url-bounds))
+	    (delete-region (point-min) (point-max))
+	    (insert url)))))))
+
+(defun weibo-url-shorten-get (longurl)
+  "Shorten LONGURL with weibo API"
+  (let ((root (with-current-buffer
+		 (weibo-retrieve-url (concat (format "%sshort_url/shorten.json?url_long=" weibo-api-url) (url-hexify-string longurl)))
+	       (weibo-get-body))))
+    (cdr (nth 2 (elt (cdr (car root)) 0)))))
+
 (provide 'weibo)
