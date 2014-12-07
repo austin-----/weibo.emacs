@@ -44,7 +44,14 @@
 (defun weibo-parse-token (string)
   (when (string-match "\\([^:]*\\):\\(.*\\)" string)
     (setq weibo-token (match-string 1 string))
-    (setq weibo-token-expire (match-string 2 string))))
+    (setq weibo-token-expire (match-string 2 string))
+    (setq weibo-token-expire (number-to-string (+ (float-time) (string-to-number weibo-token-expire))))
+    (save-excursion
+      (find-file (weibo-get-token-file))
+      (erase-buffer)
+      (insert (format "%s:%s\n" weibo-token weibo-token-expire))
+      (save-buffer)
+      (kill-this-buffer))))
 
 (defun weibo-token-expired ()
   (when weibo-token-expire
@@ -53,20 +60,12 @@
 (defun weibo-authorize (&optional reauthorize)
   (when (file-exists-p (weibo-get-token-file))
     (save-excursion
-	  (find-file (weibo-get-token-file))
-	  (weibo-parse-token (buffer-substring-no-properties (point-min) (point-max)))	 
-	  (save-buffer)
-	  (kill-this-buffer)))
+      (find-file (weibo-get-token-file))
+      (weibo-parse-token (buffer-substring-no-properties (point-min) (point-max)))
+      (save-buffer)
+      (kill-this-buffer)))
   (when (or reauthorize (not weibo-token) (weibo-token-expired))
-    (weibo-parse-token (weibo-authorize-app))
-    (setq weibo-token-expire (number-to-string (+ (float-time) (string-to-number weibo-token-expire)))))
-  (save-excursion
-    (find-file (weibo-get-token-file))
-    (erase-buffer)
-    (insert (format "%s:%s\n" weibo-token weibo-token-expire))
-    (save-buffer)
-    (kill-this-buffer))
-  weibo-token)
+    (weibo-authorize-app)))
 
 (defun weibo-check-result (root)
   (if (and root (length root)

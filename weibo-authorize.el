@@ -17,15 +17,56 @@
 
 (defconst weibo-authorize-cb-url "http://127.0.0.1:42012/")
 (defconst weibo-authorize-cb-server "weibo.emacs.cb")
-(defconst weibo-authorize-url "https://api.weibo.com/oauth2/authorize?client_id=%s&response_type=token&redirect_uri=%s")
+(defconst weibo-authorize-url "https://api.weibo.com/oauth2/authorize?client_id=%s&response_type=code&redirect_uri=%s")
+(defconst weibo-authorize-url2 "https://api.weibo.com/oauth2/access_token?client_id=%s&client_secret=%s&grant_type=authorization_code&redirect_uri=%s&code=%s")
 (defvar weibo-consumer-key "214135744")
 (defvar weibo-consumer-secret "1e0487b02bae1e0df794ebb665d12cf6")
 
+(defun weibo-authorize-parse-code (string)
+  (with-temp-buffer
+    (insert string)
+    (goto-char (point-min))
+    (let ((code-start (search-forward "GET /?code=" nil t))
+	  (code-end (search-forward " HTTP/1.1" nil t)))
+      (message "start %d" code-start)
+      (message "end %d" code-end)
+      (if (and (numberp code-start)
+	       (numberp code-end))
+	  (buffer-substring code-start (- code-end 9))
+	nil))))
+
+(defun weibo-authorize-get-token (code)
+  (let ((url (format weibo-authorize-url2 weibo-consumer-key weibo-consumer-secret weibo-authorize-cb-url code))
+	(url-request-method "POST")
+	(url-request-extra-headers
+	 `(("Content-Type" . "application/x-www-form-urlencoded"))))
+    (with-current-buffer
+	(url-retrieve-synchronously url)
+      (let ((token (weibo-get-body)))
+	(if (not (weibo-get-node-text token 'error))
+	    (progn
+	      (weibo-parse-token 
+	       (format "%s:%s" 
+		       (weibo-get-node-text token 'access_token)
+		       (weibo-get-node-text token 'expires_in)))
+	      t)
+	  (message "Error: %s" token)
+	  nil)))))
+
 (defun weibo-authorize-cb-filter (proc string)
   (set-process-coding-system proc 'utf-8 'utf-8)
-  (process-send-string proc "HTTP/1.0 200 OK\nContent-Type: text/html\n\n")
-  (process-send-string proc "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"utf-8\"><script type=\"text/javascript\" > function load_at() {var hash = document.location.hash.substring(1); var result = \"\"; var token=\"\"; var expire=\"\"; var params = hash.split(\"&\"); for (var i = 0; i < params.length; i ++) {var pairs = params[i].split(\"=\"); if (pairs[0] == \"access_token\") token=pairs[1]; if (pairs[0] == \"expires_in\") expire=pairs[1];} document.getElementById(\"access\").innerHTML = token + \":\" + expire;} window.onload=load_at; </script></head><body>emacs.weibo提示您，您的授权码是：<div style=\"border:1px solid;\" id=\"access\"></div>请将框中的字符粘贴回emacs中</html>")
-  (process-send-eof proc))
+
+  (let ((authorize-code (weibo-authorize-parse-code string))
+	(msg ""))
+    (if (stringp authorize-code)
+	(if (weibo-authorize-get-token authorize-code)
+	    (setq msg "授权成功")
+	  (setq msg "授权失败：获取token失败"))
+      (setq msg "授权失败：获取授权码失败"))
+    (process-send-string proc "HTTP/1.0 200 OK\nContent-Type: text/html\n\n")
+    (process-send-string proc (format "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"utf-8\"></head><body>emacs.weibo提示您喔，%s</html>" msg))
+    (process-send-eof proc))
+  (weibo-authorize-stop-cb-server))
 
 (defun weibo-authorize-start-cb-server ()
   (weibo-authorize-stop-cb-server)
@@ -44,8 +85,7 @@
   (weibo-authorize-start-cb-server)
   (let ((auth-url (format weibo-authorize-url (url-hexify-string weibo-consumer-key) (url-hexify-string weibo-authorize-cb-url))))
     (browse-url auth-url)
-    (let ((access-token (read-string (format "请输入授权码(如果浏览器没有自动打开，请访问 %s 获得授权码)：" auth-url))))
-      (weibo-authorize-stop-cb-server)
-      access-token)))
+    (read-string (format "请等待授权成功(如果浏览器没有自动打开，请访问 %s 以授权)：" auth-url))))
+
 
 (provide 'weibo-authorize)
