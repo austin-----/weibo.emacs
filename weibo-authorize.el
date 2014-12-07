@@ -85,7 +85,6 @@
   (weibo-authorize-start-cb-server)
   (let ((auth-url (format weibo-authorize-url (url-hexify-string weibo-consumer-key) (url-hexify-string weibo-authorize-cb-url))))
     (browse-url auth-url)
-    (read-string (format "请等待授权成功(如果浏览器没有自动打开，请访问 %s 以授权)：" auth-url))))
-
+    (read-string (format "请等待授权成功(如果浏览器没有自动打开，请访问 %s 以授权)，然后按回车键" auth-url))))
 
 (provide 'weibo-authorize)
