@@ -1,6 +1,8 @@
 ;;; weibo-timeline.el --- timeline
 
-;; Copyright (C) 2011 Austin<austiny.cn@gmail.com>
+;; Copyright (C) 2011 Austin
+
+;; Author: Austin <austiny.cn@gmail.com>
 
 ;; This program is free software: you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as

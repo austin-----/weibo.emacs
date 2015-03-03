@@ -1,6 +1,6 @@
 ;;; weibo.el --- Weibo client for Emacs
 
-;; Copyright (C) 2011 Austin<austiny.cn@gmail.com>
+;; Copyright (C) 2011 Austin
 
 ;; Author: Austin <austiny.cn@gmail.com>
 ;; URL: https://github.com/austin-----/weibo.emacs
