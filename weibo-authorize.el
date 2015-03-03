@@ -1,5 +1,7 @@
+;;; weibo-authorize.el --- authorize
+
 ;; Copyright (C) 2011 Austin<austiny.cn@gmail.com>
-          
+
 ;; This program is free software: you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of
@@ -12,6 +14,10 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;; Code:
 
 (require 'url)
 
@@ -27,41 +33,41 @@
     (insert string)
     (goto-char (point-min))
     (let ((code-start (search-forward "GET /?code=" nil t))
-	  (code-end (search-forward " HTTP/1.1" nil t)))
+          (code-end (search-forward " HTTP/1.1" nil t)))
       (message "start %d" code-start)
       (message "end %d" code-end)
       (if (and (numberp code-start)
-	       (numberp code-end))
-	  (buffer-substring code-start (- code-end 9))
-	nil))))
+               (numberp code-end))
+          (buffer-substring code-start (- code-end 9))
+        nil))))
 
 (defun weibo-authorize-get-token (code)
   (let ((url (format weibo-authorize-url2 weibo-consumer-key weibo-consumer-secret weibo-authorize-cb-url code))
-	(url-request-method "POST")
-	(url-request-extra-headers
-	 `(("Content-Type" . "application/x-www-form-urlencoded"))))
+        (url-request-method "POST")
+        (url-request-extra-headers
+         `(("Content-Type" . "application/x-www-form-urlencoded"))))
     (with-current-buffer
-	(url-retrieve-synchronously url)
+        (url-retrieve-synchronously url)
       (let ((token (weibo-get-body)))
-	(if (not (weibo-get-node-text token 'error))
-	    (progn
-	      (weibo-parse-token 
-	       (format "%s:%s" 
-		       (weibo-get-node-text token 'access_token)
-		       (weibo-get-node-text token 'expires_in)))
-	      t)
-	  (message "Error: %s" token)
-	  nil)))))
+        (if (not (weibo-get-node-text token 'error))
+            (progn
+              (weibo-parse-token
+               (format "%s:%s"
+                       (weibo-get-node-text token 'access_token)
+                       (weibo-get-node-text token 'expires_in)))
+              t)
+          (message "Error: %s" token)
+          nil)))))
 
 (defun weibo-authorize-cb-filter (proc string)
   (set-process-coding-system proc 'utf-8 'utf-8)
 
   (let ((authorize-code (weibo-authorize-parse-code string))
-	(msg ""))
+        (msg ""))
     (if (stringp authorize-code)
-	(if (weibo-authorize-get-token authorize-code)
-	    (setq msg "授权成功")
-	  (setq msg "授权失败：获取token失败"))
+        (if (weibo-authorize-get-token authorize-code)
+            (setq msg "授权成功")
+          (setq msg "授权失败：获取token失败"))
       (setq msg "授权失败：获取授权码失败"))
     (process-send-string proc "HTTP/1.0 200 OK\nContent-Type: text/html\n\n")
     (process-send-string proc (format "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"utf-8\"></head><body>emacs.weibo提示您喔，%s</html>" msg))
@@ -71,11 +77,11 @@
 (defun weibo-authorize-start-cb-server ()
   (weibo-authorize-stop-cb-server)
   (make-network-process
-    :name weibo-authorize-cb-server
-    :service 42012
-    :server t
-    :family 'ipv4
-    :filter 'weibo-authorize-cb-filter))
+   :name weibo-authorize-cb-server
+   :service 42012
+   :server t
+   :family 'ipv4
+   :filter 'weibo-authorize-cb-filter))
 
 (defun weibo-authorize-stop-cb-server ()
   (when (process-status weibo-authorize-cb-server)
@@ -88,3 +94,8 @@
     (read-string (format "请等待授权成功(如果浏览器没有自动打开，请访问 %s 以授权)，然后按回车键" auth-url))))
 
 (provide 'weibo-authorize)
+;;; weibo-authorize.el ends here
+
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:

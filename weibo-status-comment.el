@@ -1,5 +1,7 @@
+;;; weibo-status-comment.el --- status comment
+
 ;; Copyright (C) 2011 Austin<austiny.cn@gmail.com>
-          
+
 ;; This program is free software: you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of
@@ -13,6 +15,9 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Commentary:
+
+;;; Code:
 
 (defconst weibo-timeline-status-comment-buffer-name "*weibo-status-comment*")
 (defconst weibo-api-status-comments-timeline "comments/show")
@@ -30,7 +35,7 @@
 (defun weibo-status-comments-header (status)
   (with-temp-buffer
     (setq fill-column 70)
-    (set (make-local-variable 'fill-nobreak-predicate) 'weibo-timeline-name-nobreak-p)    
+    (set (make-local-variable 'fill-nobreak-predicate) 'weibo-timeline-name-nobreak-p)
     (insert "\n")
     (weibo-insert-status status nil)
     (buffer-string)))
@@ -70,3 +75,8 @@
   (weibo-timeline-refresh))
 
 (provide 'weibo-status-comment)
+;;; weibo-status-comment.el ends here
+
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:

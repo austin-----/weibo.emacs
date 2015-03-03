@@ -1,5 +1,7 @@
+;;; weibo-comment.el --- comment
+
 ;; Copyright (C) 2011 Austin<austiny.cn@gmail.com>
-          
+
 ;; This program is free software: you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of
@@ -12,6 +14,10 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;; Code:
 
 (require 'weibo-timeline)
 
@@ -31,8 +37,8 @@
 ;; status: 评论的微博,结构参考status
 ;; reply_comment 评论来源，数据结构跟comment一致
 (defstruct weibo-comment id text source
-  favorited truncated created_at
-  user status reply_comment)
+           favorited truncated created_at
+           user status reply_comment)
 
 (defun weibo-make-comment (node)
   (make-weibo-comment
@@ -44,26 +50,26 @@
    :created_at (weibo-get-node-text node 'created_at)
    :user (weibo-make-user (weibo-get-node node 'user))
    :status (let ((status (weibo-get-node node 'status)))
-	     (when status
-	       (weibo-make-status status)))
+             (when status
+               (weibo-make-status status)))
    :reply_comment (let ((reply_comment (weibo-get-node node 'reply_comment)))
-		    (when reply_comment
-		      (weibo-make-comment reply_comment)))))
+                    (when reply_comment
+                      (weibo-make-comment reply_comment)))))
 
 (defun weibo-pull-comment (node parse-func new type)
   (let* ((keyword (if new "since_id" "max_id"))
-	 (id (and node (weibo-comment-id node)))
-	 (param (and id (format "?%s=%s" keyword (if new id (weibo-string-decrement id))))))
+         (id (and node (weibo-comment-id node)))
+         (param (and id (format "?%s=%s" keyword (if new id (weibo-string-decrement id))))))
     (with-temp-message (concat "获取评论 " param "...")
       (weibo-get-data type
-		      parse-func param
-		      new)
+                      parse-func param
+                      new)
       (when new
-	(cond
-	 ((string= type weibo-api-comments-to-me-timeline)
-	  (weibo-timeline-reset-count "cmt"))
-	 ((string= type weibo-api-comments-mentions-timeline)
-	  (weibo-timeline-reset-count "mention_cmt")))))))
+        (cond
+         ((string= type weibo-api-comments-to-me-timeline)
+          (weibo-timeline-reset-count "cmt"))
+         ((string= type weibo-api-comments-mentions-timeline)
+          (weibo-timeline-reset-count "mention_cmt")))))))
 
 (defun weibo-comment-pretty-printer (comment &optional p)
   (weibo-insert-comment comment t))
@@ -77,28 +83,28 @@
     (unless with-retweet (insert "\t"))
     (weibo-timeline-insert-text (weibo-comment-text comment))
     (let ((status (weibo-comment-status comment))
-	  (reply_comment (weibo-comment-reply_comment comment)))
+          (reply_comment (weibo-comment-reply_comment comment)))
       (when reply_comment
-	(let ((text (weibo-comment-text reply_comment)))
-	  (insert weibo-timeline-sub-separator "\n")
-	  (unless with-retweet (insert "\t"))
-	  (weibo-timeline-insert-text
-	   (concat "回复" (weibo-user-screen_name
-			   (weibo-comment-user reply_comment))
-		   "的评论："
-		   (if (< (length text) 30) text
-		     (concat (substring text 0 27) "。。。"))))))
+        (let ((text (weibo-comment-text reply_comment)))
+          (insert weibo-timeline-sub-separator "\n")
+          (unless with-retweet (insert "\t"))
+          (weibo-timeline-insert-text
+           (concat "回复" (weibo-user-screen_name
+                           (weibo-comment-user reply_comment))
+                   "的评论："
+                   (if (< (length text) 30) text
+                     (concat (substring text 0 27) "。。。"))))))
       (when with-retweet
-	(when status
-	  (weibo-insert-status status t)))
-      (unless with-retweet (insert "\t"))      
+        (when status
+          (weibo-insert-status status t)))
+      (unless with-retweet (insert "\t"))
       (insert "  " (weibo-parse-status-time (weibo-comment-created_at comment)) "  来自：" (weibo-comment-source comment) "\n"))))
 
 (defun weibo-reply-comment (comment &rest p)
   (when comment
     (let ((cid (weibo-comment-id comment))
-	   (id (weibo-status-id (weibo-comment-status comment)))
-	   (user_name (weibo-user-screen_name (weibo-comment-user comment))))
+          (id (weibo-status-id (weibo-comment-status comment)))
+          (user_name (weibo-user-screen_name (weibo-comment-user comment))))
       (weibo-create-post (format "回复@%s:" user_name) "回复评论" nil 'weibo-send-reply cid id))))
 
 (defun weibo-parse-comment-result (root &rest data)
@@ -107,7 +113,7 @@
 
 (defun weibo-send-reply (text cid id)
   (let ((data nil)
-	(api weibo-api-send-reply))
+        (api weibo-api-send-reply))
     (cond
      ((= (length text) 0) (message "不能发表空回复") nil)
      ((> (length text) 140) (message "回复长度须小于140字") nil)
@@ -119,7 +125,7 @@
 
 (defun weibo-send-comment (text comment-id)
   (let ((data nil)
-	(api weibo-api-send-comment))
+        (api weibo-api-send-comment))
     (cond
      ((= (length text) 0) (message "不能发表空评论") nil)
      ((> (length text) 140) (message "评论长度须小于140字") nil)
@@ -131,30 +137,30 @@
 (defun weibo-look-comment-status (comment &rest p)
   (when comment
     (weibo-timeline-set-provider (weibo-status-comments-timeline-provider
-				  (weibo-comment-status comment)))))
+                                  (weibo-comment-status comment)))))
 
 (defun weibo-comment-update-status (comment-list type)
   (when comment-list
     (let ((ids (mapconcat (lambda (comment)
-			    (weibo-status-id (weibo-comment-status comment)))
-			  comment-list ",")))
+                            (weibo-status-id (weibo-comment-status comment)))
+                          comment-list ",")))
       (weibo-get-data weibo-api-status-counts
-		      'weibo-comment-parse-update-status (format "?ids=%s" ids) comment-list type))))
+                      'weibo-comment-parse-update-status (format "?ids=%s" ids) comment-list type))))
 
 (defun weibo-comment-parse-update-status (root comment-list type)
   (when (weibo-check-result root)
     (let ((comment-alist (mapcar (lambda (comment)
-				   `(,(weibo-status-id (weibo-comment-status comment))
-				     . ,comment)) comment-list)))
+                                   `(,(weibo-status-id (weibo-comment-status comment))
+                                     . ,comment)) comment-list)))
       (mapc (lambda (node)
-	      (let* ((id (weibo-get-node-text node 'id))
-		     (comments (weibo-get-node-text node 'comments))
-		     (rt (weibo-get-node-text node 'rt))
-		     (acomment (assoc id comment-alist))
-		     (comment (and acomment (cdr acomment))))
-		(when comment (setf (weibo-status-comments (weibo-comment-status comment)) comments
-				    (weibo-status-rt (weibo-comment-status comment)) rt))))
-	    (append root nil)))
+              (let* ((id (weibo-get-node-text node 'id))
+                     (comments (weibo-get-node-text node 'comments))
+                     (rt (weibo-get-node-text node 'rt))
+                     (acomment (assoc id comment-alist))
+                     (comment (and acomment (cdr acomment))))
+                (when comment (setf (weibo-status-comments (weibo-comment-status comment)) comments
+                                    (weibo-status-rt (weibo-comment-status comment)) rt))))
+            (append root nil)))
     `(nil . ,comment-list)))
 
 (defun weibo-comment-timeline-provider (key name data)
@@ -184,3 +190,8 @@
   (weibo-comment-timeline-provider "x" "提到我的评论" weibo-api-comments-mentions-timeline))
 
 (provide 'weibo-comment)
+;;; weibo-comment.el ends here
+
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:

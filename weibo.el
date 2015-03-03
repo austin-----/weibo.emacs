@@ -1,5 +1,12 @@
+;;; weibo.el --- Weibo client for Emacs
+
 ;; Copyright (C) 2011 Austin<austiny.cn@gmail.com>
-          
+
+;; Author: Austin <austiny.cn@gmail.com>
+;; URL: https://github.com/austin-----/weibo.emacs
+;; Version: 1.0
+;; Keywords: weibo
+
 ;; This program is free software: you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of
@@ -12,6 +19,10 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'url)
@@ -69,7 +80,7 @@
 
 (defun weibo-check-result (root)
   (if (and root (length root)
-	   (if (and (listp root) (weibo-get-node root 'error)) nil t))
+           (if (and (listp root) (weibo-get-node root 'error)) nil t))
       t
     (print (weibo-get-node-text root 'error))
     nil))
@@ -80,59 +91,59 @@
 (defun weibo-get-node-text (node tag)
   (let ((data (cdr (weibo-get-node node tag))))
     (cond ((numberp data) (format "%d" data))
-	  (t data))))
+          (t data))))
 
 (defun weibo-get-body ()
   (goto-char (point-min))
   (let ((start
-	 (or (search-forward "\r\n\r\n" nil t)
-	     (search-forward "\n\n" nil t)))
-	(buffer (current-buffer))
-	(max (point-max)))
+         (or (search-forward "\r\n\r\n" nil t)
+             (search-forward "\n\n" nil t)))
+        (buffer (current-buffer))
+        (max (point-max)))
     (when start
       (with-temp-buffer
-	(insert-buffer-substring buffer start max)
-	(mm-decode-coding-region (point-min) (point-max) 'utf-8)
-	(goto-char (point-min))
-	(while (re-search-forward "\"id\":\\([0-9]+\\)," nil t)
-	  (replace-match "\"id\":\"\\1\"," nil nil))
-	(goto-char (point-min))
-	(condition-case nil
-	    (json-read)
-	  ((error nil) `((error . ,(buffer-substring (point-min) (point-max))))))))))
+        (insert-buffer-substring buffer start max)
+        (mm-decode-coding-region (point-min) (point-max) 'utf-8)
+        (goto-char (point-min))
+        (while (re-search-forward "\"id\":\\([0-9]+\\)," nil t)
+          (replace-match "\"id\":\"\\1\"," nil nil))
+        (goto-char (point-min))
+        (condition-case nil
+            (json-read)
+          ((error nil) `((error . ,(buffer-substring (point-min) (point-max))))))))))
 
 (defun weibo-retrieve-url (url)
   (let ((url-request-method "GET")
-	(url-request-extra-headers
-	 `(("Authorization" . ,(format "OAuth2 %s" (url-hexify-string (weibo-get-token)))))))
+        (url-request-extra-headers
+         `(("Authorization" . ,(format "OAuth2 %s" (url-hexify-string (weibo-get-token)))))))
     (flet ((message (&rest args) nil))
       (url-retrieve-synchronously url))))
 
 (defun weibo-send-url (url args)
   (let ((url-request-method "POST")
-	(url-request-extra-headers
-	 `(("Content-Type" . "application/x-www-form-urlencoded")
-	   ("Authorization" . ,(format "OAuth2 %s" (url-hexify-string (weibo-get-token))))))
-	(url-request-data
-	 (mapconcat (lambda (arg)
-		      (concat (url-hexify-string (car arg))
-			      "="
-			      (url-hexify-string (cdr arg))))
-		    args
-		    "&")))
+        (url-request-extra-headers
+         `(("Content-Type" . "application/x-www-form-urlencoded")
+           ("Authorization" . ,(format "OAuth2 %s" (url-hexify-string (weibo-get-token))))))
+        (url-request-data
+         (mapconcat (lambda (arg)
+                      (concat (url-hexify-string (car arg))
+                              "="
+                              (url-hexify-string (cdr arg))))
+                    args
+                    "&")))
     (flet ((message (&rest args) nil))
       (url-retrieve-synchronously url))))
 
 (defun weibo-get-data (item callback &optional param &rest cbdata)
   (let ((root (with-current-buffer
-		  (weibo-retrieve-url (concat (format "%s%s.json" weibo-api-url item) param))
-		(weibo-get-body))))
+                  (weibo-retrieve-url (concat (format "%s%s.json" weibo-api-url item) param))
+                (weibo-get-body))))
     (apply callback (cons root cbdata))))
 
 (defun weibo-post-data (item callback vars &optional param &rest cbdata)
   (let ((root (with-current-buffer
-		       (weibo-send-url (concat (format "%s%s.json" weibo-api-url item) param) vars)
-		     (weibo-get-body))))
+                  (weibo-send-url (concat (format "%s%s.json" weibo-api-url item) param) vars)
+                (weibo-get-body))))
     (apply callback (cons root cbdata))))
 
 (defun weibo-parse-data-result (root &rest data)
@@ -141,17 +152,17 @@
 
 (defun weibo-string-decrement (str)
   (let ((strl (reverse (delete "" (split-string str ""))))
-	(result nil)
-	(done nil))
+        (result nil)
+        (done nil))
     (while strl
       (let ((c (car strl)))
-	(push
-	 (if done c
-	   (if (string= "0" c) "9"
-	     (progn
-	       (setq done t)
-	       (number-to-string (- (string-to-number c) 1)))))
-	 result))
+        (push
+         (if done c
+           (if (string= "0" c) "9"
+             (progn
+               (setq done t)
+               (number-to-string (- (string-to-number c) 1)))))
+         result))
       (setq strl (cdr strl)))
     (mapconcat 'identity result "")))
 
@@ -184,17 +195,22 @@
   (let ((url-bounds (bounds-of-thing-at-point 'url)))
     (when url-bounds
       (let ((url (weibo-url-shorten-get (thing-at-point 'url))))
-	(when url
-	  (save-restriction
-	    (narrow-to-region (car url-bounds) (cdr url-bounds))
-	    (delete-region (point-min) (point-max))
-	    (insert url)))))))
+        (when url
+          (save-restriction
+            (narrow-to-region (car url-bounds) (cdr url-bounds))
+            (delete-region (point-min) (point-max))
+            (insert url)))))))
 
 (defun weibo-url-shorten-get (longurl)
   "Shorten LONGURL with weibo API"
   (let ((root (with-current-buffer
-		 (weibo-retrieve-url (concat (format "%sshort_url/shorten.json?url_long=" weibo-api-url) (url-hexify-string longurl)))
-	       (weibo-get-body))))
+                  (weibo-retrieve-url (concat (format "%sshort_url/shorten.json?url_long=" weibo-api-url) (url-hexify-string longurl)))
+                (weibo-get-body))))
     (cdr (nth 2 (elt (cdr (car root)) 0)))))
 
 (provide 'weibo)
+;;; weibo.el ends here
+
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:
