@@ -41,6 +41,7 @@
 (defvar weibo-post-data nil)
 (defvar weibo-post-send-func nil)
 
+;;;###autoload
 (defun weibo-create-post (initial-text mode-text move-begin
                                        post-send-func
                                        &rest data)
