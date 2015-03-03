@@ -1,5 +1,9 @@
-;; Copyright (C) 2011 Austin<austiny.cn@gmail.com>
-          
+;;; weibo-post.el --- post
+
+;; Copyright (C) 2011 Austin
+
+;; Author: Austin <austiny.cn@gmail.com>
+
 ;; This program is free software: you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of
@@ -13,13 +17,17 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Commentary:
+
+;;; Code:
+
 (defconst weibo-post-buffer-name "*weibo-update*")
 (defconst weibo-post-mode-name "发表微博")
 
 (defun weibo-post-name-completion-at-point-function ()
   (let ((current-pos (point))
-	(begin (or (search-backward-regexp weibo-timeline-name-regexp2 (point-min) t) (point)))
-	(end (or (search-forward-regexp weibo-timeline-name-regexp2 (point-max) t) (point))))
+        (begin (or (search-backward-regexp weibo-timeline-name-regexp2 (point-min) t) (point)))
+        (end (or (search-forward-regexp weibo-timeline-name-regexp2 (point-max) t) (point))))
     (goto-char current-pos)
     (list begin end (append weibo-user-friends-list weibo-user-custom-list) :predicate (lambda (s) (string-equal (substring s 0 1) "@")))))
 
@@ -33,9 +41,10 @@
 (defvar weibo-post-data nil)
 (defvar weibo-post-send-func nil)
 
+;;;###autoload
 (defun weibo-create-post (initial-text mode-text move-begin
-				       post-send-func
-				       &rest data)
+                                       post-send-func
+                                       &rest data)
   (interactive)
   (select-window (split-window-vertically -8))
   (switch-to-buffer (generate-new-buffer weibo-post-buffer-name))
@@ -57,3 +66,8 @@
     (weibo-timeline-update)))
 
 (provide 'weibo-post)
+;;; weibo-post.el ends here
+
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:
