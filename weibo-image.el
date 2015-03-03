@@ -52,7 +52,7 @@
 
 (defun weibo-download-image-file (url)
   (let ((image-file (weibo-make-image-file-name url)))
-    (flet ((message (&rest args) nil))
+    (cl-flet ((message (&rest args) nil))
       (with-current-buffer (url-retrieve-synchronously url)
         (goto-char (point-min))
         (let ((end (search-forward "\n\n" nil t)))

@@ -21,7 +21,7 @@
 
 ;;; Code:
 
-(require 'cl)
+(require 'cl-lib)
 
 (defconst weibo-api-status-public-timeline "statuses/public_timeline")
 (defconst weibo-api-status-friends-timeline "statuses/friends_timeline")

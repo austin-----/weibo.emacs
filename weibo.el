@@ -4,6 +4,7 @@
 
 ;; Author: Austin <austiny.cn@gmail.com>
 ;; URL: https://github.com/austin-----/weibo.emacs
+;; Package-Requires: ((cl-lib "0.5"))
 ;; Version: 1.0
 ;; Keywords: weibo
 
@@ -24,7 +25,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(require 'cl-lib)
 (require 'url)
 (require 'json)
 (require 'weibo-authorize)
@@ -116,7 +117,7 @@
   (let ((url-request-method "GET")
         (url-request-extra-headers
          `(("Authorization" . ,(format "OAuth2 %s" (url-hexify-string (weibo-get-token)))))))
-    (flet ((message (&rest args) nil))
+    (cl-flet ((message (&rest args) nil))
       (url-retrieve-synchronously url))))
 
 (defun weibo-send-url (url args)
@@ -131,7 +132,7 @@
                               (url-hexify-string (cdr arg))))
                     args
                     "&")))
-    (flet ((message (&rest args) nil))
+    (cl-flet ((message (&rest args) nil))
       (url-retrieve-synchronously url))))
 
 (defun weibo-get-data (item callback &optional param &rest cbdata)
