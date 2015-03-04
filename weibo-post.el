@@ -34,8 +34,10 @@
 (define-derived-mode weibo-post-mode fundamental-mode weibo-post-mode-name
   "Major mode for posting weibo message"
   (set (make-variable-buffer-local 'completion-at-point-functions) '(weibo-post-name-completion-at-point-function))
+  (set (make-local-variable 'header-line-format)
+       "发微博 buffer.  Finish `C-c C-c', @ 补全 `<TAB>', abort `C-c C-k'.")
   (local-set-key "\C-c\C-c" 'weibo-send-post)
-  (local-set-key "\C-c\C-d" 'weibo-discard-post)
+  (local-set-key "\C-c\C-k" 'weibo-discard-post)
   (local-set-key [tab] 'completion-at-point))
 
 (defvar weibo-post-data nil)
