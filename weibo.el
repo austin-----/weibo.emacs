@@ -28,6 +28,21 @@
 (require 'cl-lib)
 (require 'url)
 (require 'json)
+
+
+(defgroup weibo nil
+  "Customization group for the `weibo' package."
+  :prefix "weibo-"
+  :group 'applications)
+
+;; This custom variable needs to be initialized before some other custom variable, such as,
+;; `weibo-image-directory', so I put this right before our require statements.
+(defcustom weibo-directory "~/.t.weibo.emacs.d"
+  "Directory containing various cached data."
+  :type 'directory
+  :group 'weibo)
+
+
 (require 'weibo-authorize)
 (require 'weibo-timeline)
 (require 'weibo-status)
@@ -37,9 +52,9 @@
 (require 'weibo-comment)
 (require 'weibo-status-comment)
 
+
 (defconst weibo-api-url "https://api.weibo.com/2/" "API base url")
 
-(defvar weibo-directory "~/.t.weibo.emacs.d")
 (defvar weibo-token nil)
 (defvar weibo-token-expire nil)
 
