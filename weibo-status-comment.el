@@ -57,7 +57,7 @@
   (make-weibo-timeline-provider
    :key nil
    :tag 'comments
-   :name "察看微博"
+   :name "查看微博"
    :make-function 'weibo-make-comment
    :pretty-printer-function 'weibo-status-comments-pretty-printer
    :pull-function 'weibo-pull-status-comments
