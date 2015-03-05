@@ -421,7 +421,6 @@
 
 注意并非所有命令都对所有时间线适用。比如你不能对微博进行回复和对评论进行转发。命令行将之包含当前时间线可用的命令。")
 
-;;;###autoload
 (defun weibo-timeline-help ()
   (interactive)
   (with-output-to-temp-buffer "微博帮助"
