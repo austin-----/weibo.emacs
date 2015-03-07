@@ -61,7 +61,7 @@
 ;; created_at: 创建时间
 ;; following: 是否已关注(此特性暂不支持)
 ;; verified: 加V标示，是否微博认证用户
-(defstruct weibo-user id screen_name name
+(cl-defstruct weibo-user id screen_name name
            province city location description url
            profile_image_url domain gender
            followers_count friends_count statuses_count favorites_count

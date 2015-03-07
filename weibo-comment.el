@@ -38,7 +38,7 @@
 ;; user: 评论人信息,结构参考user
 ;; status: 评论的微博,结构参考status
 ;; reply_comment 评论来源，数据结构跟comment一致
-(defstruct weibo-comment id text source
+(cl-defstruct weibo-comment id text source
            favorited truncated created_at
            user status reply_comment)
 

@@ -91,7 +91,7 @@
   (weibo-post-data weibo-api-reset-count (lambda (root))
                    `(("type" . ,type))))
 
-(defstruct weibo-timeline-provider
+(cl-defstruct weibo-timeline-provider
   key
   tag
   name

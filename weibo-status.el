@@ -46,7 +46,7 @@
 ;; original_pic：原始图片
 ;; user: 作者信息
 ;; retweeted_status: 转发的博文，内容为status，如果不是转发，则没有此字段
-(defstruct weibo-status created_at id text
+(cl-defstruct weibo-status created_at id text
            source favorited truncated
            in_reply_to_status_id
            in_reply_to_user_id
@@ -82,7 +82,7 @@
   (let* ((keyword (if new "since_id" "max_id"))
          (id (and node (weibo-status-id node)))
          (idparam (and id (format "%s=%s" keyword (if new id (weibo-string-decrement id)))))
-         (param (format "?%s" (mapconcat 'identity (remove-if-not 'stringp (list weibo-timeline-extra-params idparam)) "&"))))
+         (param (format "?%s" (mapconcat 'identity (cl-remove-if-not 'stringp (list weibo-timeline-extra-params idparam)) "&"))))
     (with-temp-message (concat "获取微博 " param "...")
       (weibo-get-data type
                       parse-func param
