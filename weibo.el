@@ -150,6 +150,42 @@
     (cl-flet ((message (&rest args) nil))
       (url-retrieve-synchronously url))))
 
+(defun weibo-get-picture-media-type (extension)
+  (pcase (downcase extension)
+    ("png" "image/png")
+    ("gif" "image/gif")
+    ((or "jpg" "jpeg" "jpe" "jif" "jfif" "jfi") "image/jpeg")
+    (_  (error "Unknown image extension '%s'" extension))))
+
+(defun weibo-read-picture-contents (picture)
+  (with-temp-buffer
+    (insert-file-contents-literally picture)
+    (buffer-substring (point-min) (point-max))))
+
+(defun weibo-send-url-with-picture (url text picture)
+  (let ((url-request-method "POST")
+        (url-request-extra-headers
+         `(("Content-Type" .
+            "multipart/form-data; boundary=--WebKitFormBoundaryE19zNvXGzXaLvS5C")
+           ("Authorization" .
+            ,(format "OAuth2 %s" (url-hexify-string (weibo-get-token))))))
+        (url-request-data
+         (format
+          (concat
+           "----WebKitFormBoundaryE19zNvXGzXaLvS5C\r\nContent-Disposition: form-data; name=\"status\"\r\n\r\n"
+           "%s\r\n"                     ; Text
+           "----WebKitFormBoundaryE19zNvXGzXaLvS5C\r\n"
+           "Content-Disposition: form-data; name=\"pic\"; filename=\"%s\"\r\n" ; Filename
+           "Content-Type: %s\r\n\r\n"   ; Media type
+           "%s\r\n"                     ; Picture contents
+           "----WebKitFormBoundaryE19zNvXGzXaLvS5C--")
+          (url-hexify-string text)
+          (url-hexify-string picture)
+          (url-hexify-string
+           (weibo-get-picture-media-type (file-name-extension picture)))
+          (weibo-read-picture-contents picture))))
+    (url-retrieve-synchronously url)))
+
 (defun weibo-get-data (item callback &optional param &rest cbdata)
   (let ((root (with-current-buffer
                   (weibo-retrieve-url (concat (format "%s%s.json" weibo-api-url item) param))
@@ -160,6 +196,15 @@
   (let ((root (with-current-buffer
                   (weibo-send-url (concat (format "%s%s.json" weibo-api-url item) param) vars)
                 (weibo-get-body))))
+    (apply callback (cons root cbdata))))
+
+(defun weibo-post-data-with-picture (item callback text picture &optional param &rest cbdata)
+  (let ((root
+         (with-current-buffer
+             (weibo-send-url-with-picture
+              (concat (format "%s%s.json" weibo-api-url item) param)
+              text picture)
+           (weibo-get-body))))
     (apply callback (cons root cbdata))))
 
 (defun weibo-parse-data-result (root &rest data)
