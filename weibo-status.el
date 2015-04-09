@@ -29,6 +29,7 @@
 (defconst weibo-api-status-mention-timeline "statuses/mentions")
 
 (defconst weibo-api-status-update "statuses/update")
+(defconst weibo-api-status-upload "statuses/upload")
 (defconst weibo-api-status-repost "statuses/repost")
 (defconst weibo-api-status-counts "statuses/counts")
 
@@ -205,12 +206,15 @@
 ;; reply-to-id t weibo-api-status-repost
 ;; reply-to-id 0 text t weibo-api-status-update
 ;; reply-to-id 0 text 0 message
-(defun weibo-send-status (text &optional reply-to-id)
+(defun weibo-send-status (text &optional reply-to-id picture)
   (let ((data nil)
         (api weibo-api-status-update))
     (cond
      ((= (length text) 0) (message "不能发表空消息") nil)
      ((> (length text) 140) (message "消息长度须小于140字") nil)
+     (picture
+      (setq api weibo-api-status-upload)
+      (weibo-post-data-with-picture api 'weibo-parse-data-result text picture))
      (t
       (add-to-list 'data `("status" . ,text))
       (when reply-to-id
