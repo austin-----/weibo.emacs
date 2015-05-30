@@ -27,8 +27,8 @@
 (defconst weibo-authorize-cb-server "weibo.emacs.cb")
 (defconst weibo-authorize-url "https://api.weibo.com/oauth2/authorize?client_id=%s&response_type=code&redirect_uri=%s")
 (defconst weibo-authorize-url2 "https://api.weibo.com/oauth2/access_token?client_id=%s&client_secret=%s&grant_type=authorization_code&redirect_uri=%s&code=%s")
-(defvar weibo-consumer-key "214135744")
-(defvar weibo-consumer-secret "1e0487b02bae1e0df794ebb665d12cf6")
+(defvar weibo-consumer-key nil)
+(defvar weibo-consumer-secret nil)
 
 (defun weibo-authorize-parse-code (string)
   (with-temp-buffer
